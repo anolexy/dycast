@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import { debounce } from '@/utils/loashUtil';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 
 interface TestRV {
   flag: boolean;
@@ -223,7 +223,9 @@ $testColor: $cancelColor;
     font-size: 16px;
     cursor: pointer;
     color: $confirmColor;
-    transition: opacity 0.2s, transform cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s;
+    transition:
+      opacity 0.2s,
+      transform cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s;
     display: flex;
     flex-direction: column;
     align-items: center;

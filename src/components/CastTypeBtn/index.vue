@@ -34,7 +34,7 @@ const typeTips: Record<CastType, string> = {
   gift: '礼物',
   like: '点赞',
   member: '进入',
-  social: '关注'
+  social: '社交'
 };
 
 const active = ref(props.defaultValue);

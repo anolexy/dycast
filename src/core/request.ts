@@ -1,5 +1,5 @@
 import { getAbogus } from './abogus';
-import type { DyImInfo } from './dycast';
+import type { DyImInfo } from './type';
 import { decodeResponse } from './model';
 import { getMsToken } from './signature';
 import { makeUrlParams, parseLiveHtml } from './util';

@@ -31,7 +31,26 @@ interface FileSystemFileHandle {
   createWritable(): Promise<FileSystemWritableFileStream>;
 }
 
+// global.d.ts
+
+interface CookieStore {
+  get(name: string): Promise<CookieListItem | null>;
+  getAll(name?: string): Promise<CookieListItem[]>;
+  set(name: string, value: string): Promise<void>;
+  set(options: CookieInit): Promise<void>;
+  delete(name: string): Promise<void>;
+  delete(options: CookieStoreDeleteOptions): Promise<void>;
+  addEventListener(type: 'change', listener: (event: CookieChangeEvent) => void): void;
+  removeEventListener(type: 'change', listener: (event: CookieChangeEvent) => void): void;
+}
+
+declare var CookieStore: {
+  prototype: CookieStore;
+  new (): CookieStore;
+};
+
 interface Window {
+  cookieStore: CookieStore;
   showOpenFilePicker(options?: OpenFilePickerOptions): Promise<FileSystemFileHandle[]>;
   showSaveFilePicker(options?: SaveFilePickerOptions): Promise<FileSystemFileHandle>;
 }

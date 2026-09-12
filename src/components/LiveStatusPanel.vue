@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ConnectStatus } from '@/core/dycast';
+import type { ConnectStatus } from '@/core/type';
 import useTimeCounter from '@/hooks/useTimeCounter';
 import { ref, watch } from 'vue';
 

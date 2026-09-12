@@ -1,4 +1,4 @@
-import type { DyLiveInfo } from './dycast';
+import type { DyLiveInfo } from './type';
 
 /**
  * 解析直播间信息

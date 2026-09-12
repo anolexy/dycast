@@ -25,7 +25,8 @@
 </template>
 
 <script setup lang="ts">
-import { CastMethod, CastRtfContentType, type CastGift, type CastRtfContent, type CastUser } from '@/core/dycast';
+import { CastMethod, CastRtfContentType } from '@/core/type';
+import type { CastGift, CastRtfContent, CastUser } from '@/core/type';
 import { emojis } from '@/core/emoji';
 import { computed } from 'vue';
 

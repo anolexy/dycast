@@ -21,159 +21,27 @@ import type {
   Message,
   RoomRankMessage_RoomRank,
   RoomUserSeqMessage_Contributor,
+  SocialMessage,
   Text,
   User
 } from './model';
 import { fetchUser, getImInfo, getLiveInfo } from './request';
 import { getSignature } from './signature';
-// import { logUserCast } from '@/utils/debugUtil';
+import { CastMethod, CastRtfContentType, ControlAction, DyCastCloseCode, RoomStatus, SocialAction } from './type';
+import type {
+  CastGift,
+  CastRtfContent,
+  CastSocial,
+  CastUser,
+  DyImInfo,
+  DyLiveInfo,
+  DyMessage,
+  LiveRankItem,
+  PartialDyMessage
+} from './type';
+// 引入 debug 接口
+// import { testDyMessage, testMessage } from '../../test/web';
 
-/**
- * 连接状态
- *  - 0 - 未连接
- *  - 1 - 连接中(连接完成)
- *  - 2 - 连接失败
- *  - 3 - 已断开
- */
-export type ConnectStatus = 0 | 1 | 2 | 3;
-
-/** 直播间信息 */
-export interface LiveRoom {
-  /**
-   * 在线观众数
-   */
-  audienceCount?: number | string;
-  /**
-   * 本场点赞数
-   */
-  likeCount?: number | string;
-  /**
-   * 主播粉丝数
-   */
-  followCount?: number | string;
-  /**
-   * 累计观看人数
-   */
-  totalUserCount?: number | string;
-  /** 房间状态 */
-  status?: number;
-}
-
-/** 直播间信息-连接信息 */
-export interface DyLiveInfo {
-  roomNum?: string;
-  roomId: string;
-  uniqueId: string;
-  avatar: string;
-  cover: string;
-  nickname: string;
-  title: string;
-  status: number;
-}
-/** 直播间信息-初次连接信息 */
-export interface DyImInfo {
-  cursor?: string;
-  fetchInterval?: string;
-  now?: string;
-  internalExt?: string;
-  fetchType?: number;
-  pushServer?: string;
-  liveCursor?: string;
-}
-
-/**
- * 送礼点赞榜
- */
-export interface LiveRankItem {
-  nickname: string;
-  avatar: string;
-  rank: number | string;
-}
-
-export interface CastUser {
-  // user.sec_uid | user.id_str
-  id?: string;
-  // user.nickname
-  name?: string;
-  // user.avatar_thumb.url_list.0
-  avatar?: string;
-  // 性别 0 | 1 | 2 => 未知 | 男 | 女
-  gender?: number;
-}
-
-export interface CastGift {
-  id?: string;
-  name?: string;
-  // 抖音币 diamond_count
-  price?: number;
-  type?: number;
-  // 描述
-  desc?: string;
-  // 图片
-  icon?: string;
-  // 数量 repeat_count | combo_count
-  count?: number | string;
-  // 礼物消息可能重复发送，0 表示第一次，未重复
-  repeatEnd?: number;
-}
-
-/**
- * 富文本类型
- *  1 - 普通文本
- *  2 - 合并表情
- */
-export enum CastRtfContentType {
-  TEXT = 1,
-  EMOJI = 2,
-  USER = 3
-}
-
-// 富文本
-export interface CastRtfContent {
-  type?: CastRtfContentType;
-  text?: string;
-  url?: string;
-  user?: CastUser;
-}
-
-export interface DyMessage {
-  id?: string;
-  method?: CastMethod;
-  user?: CastUser;
-  toUser?: CastUser;
-  gift?: CastGift;
-  content?: string;
-  rtfContent?: CastRtfContent[];
-  room?: LiveRoom;
-  rank?: LiveRankItem[];
-}
-
-export enum CastMethod {
-  CHAT = 'WebcastChatMessage',
-  GIFT = 'WebcastGiftMessage',
-  LIKE = 'WebcastLikeMessage',
-  MEMBER = 'WebcastMemberMessage',
-  SOCIAL = 'WebcastSocialMessage',
-  ROOM_USER_SEQ = 'WebcastRoomUserSeqMessage',
-  CONTROL = 'WebcastControlMessage',
-  ROOM_RANK = 'WebcastRoomRankMessage',
-  ROOM_STATS = 'WebcastRoomStatsMessage',
-  EMOJI_CHAT = 'WebcastEmojiChatMessage',
-  FANSCLUB = 'WebcastFansclubMessage',
-  ROOM_DATA_SYNC = 'WebcastRoomDataSyncMessage',
-  /** 自定义消息 */
-  CUSTOM = 'CustomMessage'
-}
-
-/**
- * 直播间直播状态
- */
-export enum RoomStatus {
-  PREPARE = 1,
-  LIVING = 2,
-  PAUSE = 3,
-  END = 4
-}
 /** 客户端状态 */
 enum WSRoomStatus {
   /** 未连接 */
@@ -221,33 +89,6 @@ interface DyCastEvent extends EventMap {
   reconnecting: (count?: number, code?: DyCastCloseCode, reason?: string) => void;
   /** 重连完成 */
   reconnect: (ev?: Event) => void;
-}
-
-/**
- * 自定义关闭码
- */
-export enum DyCastCloseCode {
-  /** 正常关闭 */
-  NORMAL = 1000,
-  /** 终端离开，可能因为服务端错误，也可能因为浏览器正从打开连接的页面跳转离开 */
-  GOING_AWAY = 1001,
-  /** 由于协议错误而中断连接 */
-  PROTOCOL_ERROR = 1002,
-  /** 接收到不允许的数据类型而断开连接 */
-  UNSUPPORTED = 1003,
-  /** 没有收到预期的状态码 */
-  NO_STATUS = 1005,
-  /** 没有处理关闭帧 */
-  ABNORMAL = 1006,
-  /** 应用自定义状态码 */
-  /** 主播未开播 */
-  LIVE_END = 4001,
-  /** 连接过程错误 */
-  CONNECTING_ERROR = 4002,
-  /** 无法正常接收信息 */
-  CANNOT_RECEIVE = 4003,
-  /** 因重连关闭 */
-  RECONNECTING = 4004
 }
 
 // 配置
@@ -748,11 +589,13 @@ export class DyCast {
    */
   private async _dealMessage(msg: Message) {
     const method = msg.method;
-    const data: DyMessage | null = {};
-    data.id = msg.msgId;
+    const data: PartialDyMessage = {};
+    data.id = msg.msgId || '';
     let message = null;
     let payload = msg.payload;
     if (!payload) return null;
+    // 测试接收到的原始消息
+    // testMessage(msg);
     try {
       // 处理消息
       switch (method) {
@@ -769,7 +612,11 @@ export class DyCast {
           data.method = CastMethod.GIFT;
           data.user = this._getCastUser(message.user);
           data.toUser = this._getCastUser(message.toUser);
-          data.gift = this._getCastGift(message.gift, message.repeatCount || message.comboCount, message.repeatEnd);
+          data.gift = this._getCastGift(
+            message.gift,
+            message.groupCount || message.repeatCount || message.comboCount,
+            message.repeatEnd
+          );
           break;
         case CastMethod.LIKE:
           message = decodeLikeMessage(payload);
@@ -789,8 +636,7 @@ export class DyCast {
           message = decodeSocialMessage(payload);
           data.method = CastMethod.SOCIAL;
           data.user = this._getCastUser(message.user);
-          data.content = '关注了主播';
-          data.room = { followCount: message.followCount };
+          Object.assign(data, this._getCastSocial(message));
           break;
         case CastMethod.EMOJI_CHAT:
           message = decodeEmojiChatMessage(payload);
@@ -808,7 +654,7 @@ export class DyCast {
           message = decodeControlMessage(payload);
           data.method = CastMethod.CONTROL;
           data.content = message.common?.describe;
-          data.room = { status: parseInt(message.action || '') || void 0 };
+          data.room = { status: this._getControlStatus(message.action || '') || void 0 };
           break;
         case CastMethod.ROOM_RANK:
           message = decodeRoomRankMessage(payload);
@@ -826,7 +672,71 @@ export class DyCast {
       // MLog.error('DyCast Message Decode Error =>', method);
       return null;
     }
-    return data;
+    // 测试处理后的消息
+    // testDyMessage(data as DyMessage);
+    return data as DyMessage;
+  }
+
+  /**
+   * 获取 Social 消息数据
+   * @param data
+   * @returns
+   */
+  private _getCastSocial(data?: SocialMessage): PartialDyMessage | undefined {
+    if (!data) return void 0;
+    const res: PartialDyMessage = {};
+    switch (Number(data.action)) {
+      case SocialAction.Follow:
+        res.content = '关注了主播';
+        res.social = {
+          action: SocialAction.Follow,
+          target: data.shareTarget,
+          type: data.shareType
+        };
+        break;
+      case SocialAction.Unfollow:
+        res.content = '取消关注主播';
+        res.social = {
+          action: SocialAction.Unfollow,
+          target: data.shareTarget,
+          type: data.shareType
+        };
+        break;
+      case SocialAction.Share:
+        res.content = '分享了直播';
+        res.social = {
+          action: SocialAction.Share,
+          target: data.shareTarget,
+          type: data.shareType
+        };
+        break;
+    }
+    return res;
+  }
+
+  /**
+   * 获取直播间状态
+   */
+  private _getControlStatus(action?: string): RoomStatus | undefined {
+    if (!action) return void 0;
+    let status: RoomStatus | undefined;
+    switch (Number(action)) {
+      case ControlAction.FINISH:
+      case ControlAction.FINISH_BY_ADMIN:
+      case ControlAction.ROOM_FINISH_BY_SWITCH:
+        status = RoomStatus.END;
+        break;
+      case ControlAction.PAUSE:
+        status = RoomStatus.PAUSE;
+        break;
+      case ControlAction.RESUME:
+        status = RoomStatus.LIVING;
+        break;
+      default:
+        status = Number(action);
+        break;
+    }
+    return status;
   }
 
   /**

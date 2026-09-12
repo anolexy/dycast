@@ -66,16 +66,9 @@ import LiveStatusPanel from '@/components/LiveStatusPanel.vue';
 import CastList from '@/components/CastList.vue';
 import SidTool from '@/components/SidTool/SidTool.vue';
 import FeedDialog from '@/components/FeedDialog.vue';
-import {
-  CastMethod,
-  DyCast,
-  DyCastCloseCode,
-  RoomStatus,
-  type ConnectStatus,
-  type DyLiveInfo,
-  type DyMessage,
-  type LiveRoom
-} from '@/core/dycast';
+import { DyCast } from '@/core/dycast';
+import { CastMethod, DyCastCloseCode, RoomStatus } from '@/core/type';
+import type { ConnectStatus, DyLiveInfo, DyMessage, LiveRoom } from '@/core/type';
 import { verifyRoomNum, verifyWsUrl } from '@/utils/verifyUtil';
 import { ref, useTemplateRef } from 'vue';
 import { CLog } from '@/utils/logUtil';

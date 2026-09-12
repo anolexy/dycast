@@ -51,7 +51,8 @@ import { computed, nextTick, onMounted, ref } from 'vue';
 import type { CastType } from './CastTypeBtn/type';
 import { getId } from '@/utils/idUtil';
 import CastItem from './CastItem.vue';
-import { CastMethod, type DyMessage } from '@/core/dycast';
+import { CastMethod } from '@/core/type';
+import type { DyMessage } from '@/core/type';
 import { throttle } from '@/utils/loashUtil';
 
 // vue-virtual-scroller 基本原理
